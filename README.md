@@ -1,5 +1,4 @@
 # ByPulse-menu
-# ByPulse Screen Menu
 
 An animated, full-screen display page for the in-store screens at **ByPulse**, Dubai's first AI-operated juice bar at TheBlock, One Central.
 
