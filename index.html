@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#121212">
+  <title>Menu | ByPulse</title>
+
+  <!-- ByPulse brand fonts: Fredoka (headlines) + DM Sans (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* =========================================================
+       ByPulse in-store screen menu
+       Made for a display screen: fits on one screen, no scrolling,
+       nothing to tap. Works on portrait and landscape screens.
+       ========================================================= */
+
+    /* ===== Brand colours ===== */
+    :root {
+      --lime: #A1FF92;
+      --citrus: #F8FF92;
+      --raspberry: #A43347;
+      --plum: #6B1C49;
+      --ink: #121212;
+      --white: #FFFFFF;
+      --grey: #F3F3F3;
+      --u: 1vmin;              /* size unit that scales with the screen */
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;        /* screen = no scrolling */
+      background: var(--ink);
+    }
+
+    body {
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      position: relative;
+    }
+
+    /* =========================================================
+       1. INTRO: juice fills the screen once, then opens
+       ========================================================= */
+    .splash {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      animation: splashOut 1s cubic-bezier(.77,0,.18,1) 2.8s forwards;
+    }
+    .splash .liquid {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 0%;
+      background: var(--lime);
+      animation: fillUp 2.3s cubic-bezier(.45,.05,.35,1) 0.2s forwards;
+    }
+    .splash .liquid svg {
+      position: absolute;
+      top: calc(var(--u) * -4.8);
+      left: 0;
+      width: 200%;
+      height: calc(var(--u) * 5);
+      animation: waveMove 2.4s linear infinite;
+    }
+    .splash .liquid svg path { fill: var(--lime); }
+    .splash-logo {
+      position: relative;
+      z-index: 2;
+      width: calc(var(--u) * 45);
+      animation: splashLogo 2.6s ease forwards;
+    }
+    @keyframes fillUp { to { height: 100%; } }
+    @keyframes waveMove { to { transform: translateX(-50%); } }
+    @keyframes splashLogo {
+      0%   { transform: scale(0.3) rotate(-15deg); opacity: 0; filter: brightness(1); }
+      25%  { transform: scale(1.1) rotate(4deg);   opacity: 1; }
+      35%  { transform: scale(1)   rotate(0); }
+      70%  { filter: brightness(1); }
+      100% { transform: scale(1.05); opacity: 1; filter: brightness(0); }
+    }
+    @keyframes splashOut {
+      to { transform: translateY(-100%); border-radius: 0 0 50% 50%; visibility: hidden; }
+    }
+
+    /* =========================================================
+       2. BACKGROUND: slow glows, bubbles and falling leaves
+       ========================================================= */
+    .bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(calc(var(--u) * 9)); }
+    .blob.lime   { width: 45vmax; height: 45vmax; background: var(--lime);      top: -15vmax; left: -12vmax;  opacity: 0.4;  animation: drift1 24s ease-in-out infinite alternate; }
+    .blob.citrus { width: 34vmax; height: 34vmax; background: var(--citrus);    top: 35%;     right: -14vmax; opacity: 0.2;  animation: drift2 28s ease-in-out infinite alternate; }
+    .blob.rasp   { width: 42vmax; height: 42vmax; background: var(--raspberry); bottom: -18vmax; left: 20%;  opacity: 0.45; animation: drift3 26s ease-in-out infinite alternate; }
+    @keyframes drift1 { to { transform: translate(15vmax, 18vmax) scale(1.2); } }
+    @keyframes drift2 { to { transform: translate(-16vmax, -14vmax) scale(0.85); } }
+    @keyframes drift3 { to { transform: translate(-18vmax, -10vmax) scale(1.15); } }
+
+    .bubble {
+      position: absolute;
+      bottom: -5vmin;
+      border-radius: 50%;
+      border: 2px solid var(--lime);
+      opacity: 0;
+      animation: rise linear infinite;
+    }
+    @keyframes rise {
+      0%   { transform: translateY(0) scale(0.6); opacity: 0; }
+      15%  { opacity: 0.45; }
+      100% { transform: translateY(-110vh) scale(1.1); opacity: 0; }
+    }
+
+    .leaf { position: absolute; top: -8vmin; animation: fall linear infinite; }
+    .leaf svg { display: block; width: 100%; height: 100%; }
+    @keyframes fall {
+      0%   { transform: translate(0, 0) rotate(0deg); }
+      25%  { transform: translate(5vmin, 30vh) rotate(90deg); }
+      50%  { transform: translate(-4vmin, 60vh) rotate(200deg); }
+      75%  { transform: translate(4vmin, 90vh) rotate(280deg); }
+      100% { transform: translate(0, 120vh) rotate(360deg); }
+    }
+
+    /* =========================================================
+       3. LAYOUT (one full screen)
+       ========================================================= */
+    .screen {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto auto;   /* intro / tickers / menu / QR / footer */
+      grid-template-areas:
+        "intro"
+        "ticker"
+        "menu"
+        "qr"
+        "footer";
+    }
+    .intro  { grid-area: intro; }
+    .ticker-wrap { grid-area: ticker; }
+    .menu-area { grid-area: menu; }
+    .qr-box { grid-area: qr; }
+    .wave-footer { grid-area: footer; }
+
+    /* Landscape screens (TV on its side): text + QR left, menu right */
+    @media (orientation: landscape) {
+      .screen {
+        grid-template-columns: 42% 58%;
+        grid-template-rows: 1fr auto auto auto;
+        grid-template-areas:
+          "intro  menu"
+          "qr     menu"
+          "ticker ticker"
+          "footer footer";
+      }
+      .intro { align-self: end; }
+      .qr-box { align-self: start; }
+    }
+
+    /* things with class "in" bounce in after the intro */
+    .in { opacity: 0; animation: fadeUp 1s cubic-bezier(.34,1.56,.64,1) forwards; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(calc(var(--u) * 5)) scale(0.95); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* ===== Intro block: logo, pulse line, Menu., rotating line ===== */
+    .intro {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: calc(var(--u) * 4) calc(var(--u) * 3) calc(var(--u) * 1);
+    }
+    .logo {
+      width: calc(var(--u) * 30);
+      display: block;
+      animation: fadeUp 1s cubic-bezier(.34,1.56,.64,1) 3.2s both,
+                 heartbeat 3s ease-in-out 4.2s infinite;
+      filter: drop-shadow(0 0 calc(var(--u) * 2.5) rgba(161,255,146,0.45));
+    }
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      12%      { transform: scale(1.05); }
+      24%      { transform: scale(0.99); }
+      36%      { transform: scale(1.03); }
+      50%      { transform: scale(1); }
+    }
+
+    .pulse-line {
+      width: calc(var(--u) * 30);
+      height: calc(var(--u) * 5.5);
+      margin: calc(var(--u) * 0.8) 0;
+      animation-delay: 3.3s;
+    }
+    .pulse-line path {
+      fill: none;
+      stroke: var(--lime);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 320;
+      stroke-dashoffset: 320;
+      animation: drawLine 3s ease-in-out 3.6s infinite;
+      filter: drop-shadow(0 0 6px var(--lime));
+    }
+    @keyframes drawLine {
+      0%   { stroke-dashoffset: 320; opacity: 1; }
+      60%  { stroke-dashoffset: 0;   opacity: 1; }
+      100% { stroke-dashoffset: 0;   opacity: 0; }
+    }
+
+    h1 {
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: calc(var(--u) * 13);
+      line-height: 1;
+      display: flex;
+    }
+    h1 span {
+      display: inline-block;
+      opacity: 0;
+      background: linear-gradient(100deg, var(--white) 40%, var(--lime) 50%, var(--white) 60%);
+      background-size: 300% 100%;
+      background-position: 100% 0;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: letterDrop 0.8s cubic-bezier(.34,1.56,.64,1) forwards,
+                 shimmer 6s linear infinite;
+    }
+    h1 span:nth-child(1) { animation-delay: 3.4s, 5s; }
+    h1 span:nth-child(2) { animation-delay: 3.5s, 5s; }
+    h1 span:nth-child(3) { animation-delay: 3.6s, 5s; }
+    h1 span:nth-child(4) { animation-delay: 3.7s, 5s; }
+    h1 .dot {
+      background: none;
+      color: var(--lime);
+      animation: letterDrop 0.8s cubic-bezier(.34,1.56,.64,1) 3.9s forwards,
+                 dotPulse 1.6s ease-in-out 5s infinite;
+    }
+    @keyframes letterDrop {
+      0%   { opacity: 0; transform: translateY(calc(var(--u) * -10)) rotate(-20deg); }
+      60%  { opacity: 1; transform: translateY(calc(var(--u) * 1)) rotate(4deg); }
+      100% { opacity: 1; transform: none; }
+    }
+    @keyframes shimmer {
+      0%   { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+    @keyframes dotPulse {
+      0%, 100% { opacity: 1; transform: scale(1);    text-shadow: 0 0 0 transparent; }
+      50%      { opacity: 1; transform: scale(1.3);  text-shadow: 0 0 calc(var(--u) * 3) var(--lime); }
+    }
+
+    /* rotating line from the ByPulse deck (types itself) */
+    .tagline {
+      margin-top: calc(var(--u) * 1.5);
+      font-size: calc(var(--u) * 3);
+      color: var(--grey);
+      min-height: calc(var(--u) * 4.2);
+    }
+    .tagline b { color: var(--lime); font-weight: 700; }
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: calc(var(--u) * 3);
+      background: var(--lime);
+      margin-left: 3px;
+      vertical-align: calc(var(--u) * -0.4);
+      animation: blink 1s steps(1) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ===== Two crossing tickers (slow, easy on the eyes) ===== */
+    .ticker-wrap {
+      position: relative;
+      width: 100%;
+      height: calc(var(--u) * 15);
+      overflow: hidden;
+      animation-delay: 3.7s;
+    }
+    .ticker {
+      position: absolute;
+      left: -10%;
+      width: 120%;
+      top: calc(var(--u) * 4.5);
+      padding: calc(var(--u) * 1.2) 0;
+      overflow: hidden;
+    }
+    .ticker.a { background: var(--lime);      color: var(--ink);   transform: rotate(-3deg); z-index: 2; box-shadow: 0 0 calc(var(--u) * 4) rgba(161,255,146,0.3); }
+    .ticker.b { background: var(--raspberry); color: var(--white); transform: rotate(3deg); }
+    .ticker-track {
+      display: flex;
+      width: max-content;
+      animation: scroll 90s linear infinite;      /* slow */
+    }
+    .ticker.b .ticker-track { animation-direction: reverse; animation-duration: 110s; }
+    .ticker-track span {
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: calc(var(--u) * 2.6);
+      white-space: nowrap;
+      padding: 0 calc(var(--u) * 2);
+    }
+    @keyframes scroll { to { transform: translateX(-50%); } }
+
+    /* ===== Menu card: spinning colour border, gently floating ===== */
+    .menu-area {
+      position: relative;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: calc(var(--u) * 1.5) calc(var(--u) * 3);
+      animation-delay: 3.9s;
+    }
+    .menu-card {
+      position: relative;
+      border-radius: calc(var(--u) * 3);
+      padding: 4px;
+      overflow: hidden;
+      animation: floaty 7s ease-in-out infinite;
+      box-shadow: 0 calc(var(--u) * 4) calc(var(--u) * 8) calc(var(--u) * -3) rgba(161,255,146,0.35);
+    }
+    .menu-card::before {
+      content: "";
+      position: absolute;
+      inset: -50%;
+      background: conic-gradient(var(--lime), var(--citrus), var(--raspberry), var(--plum), var(--lime));
+      animation: spin 10s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes floaty {
+      0%, 100% { translate: 0 0; }
+      50%      { translate: 0 calc(var(--u) * -1); }
+    }
+    .menu-image {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: calc(var(--u) * 3 - 4px);
+      background: var(--ink);
+    }
+
+    /* ===== QR code: scan to order ===== */
+    .qr-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: calc(var(--u) * 3);
+      padding: calc(var(--u) * 2) calc(var(--u) * 3);
+      animation-delay: 4.1s;
+    }
+    .qr-frame {
+      position: relative;
+      flex: none;
+      width: calc(var(--u) * 17);
+      height: calc(var(--u) * 17);
+      padding: calc(var(--u) * 1);
+      background: var(--white);
+      border-radius: calc(var(--u) * 2.2);
+      box-shadow: 0 0 0 calc(var(--u) * 0.6) var(--lime);
+      animation: qrGlow 3s ease-in-out infinite;
+    }
+    .qr-frame img { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+    /* a Lime scan line moving over the QR */
+    .qr-frame::after {
+      content: "";
+      position: absolute;
+      left: 6%; right: 6%;
+      height: 3px;
+      top: 8%;
+      background: var(--lime);
+      box-shadow: 0 0 10px var(--lime), 0 0 20px var(--lime);
+      border-radius: 3px;
+      animation: scanLine 3.5s ease-in-out infinite;
+      opacity: 0.85;
+    }
+    @keyframes scanLine {
+      0%, 100% { top: 8%; }
+      50%      { top: 90%; }
+    }
+    @keyframes qrGlow {
+      0%, 100% { box-shadow: 0 0 0 calc(var(--u) * 0.6) var(--lime), 0 0 calc(var(--u) * 2) rgba(161,255,146,0.3); }
+      50%      { box-shadow: 0 0 0 calc(var(--u) * 0.6) var(--lime), 0 0 calc(var(--u) * 5) rgba(161,255,146,0.7); }
+    }
+    .qr-text { text-align: center; }
+    .qr-text p { margin-left: auto; margin-right: auto; }
+
+
+    .qr-text h2 {
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: calc(var(--u) * 5);
+      line-height: 1.05;
+      color: var(--lime);
+    }
+    .qr-text p {
+      margin-top: calc(var(--u) * 0.8);
+      font-size: calc(var(--u) * 2.4);
+      color: var(--grey);
+      opacity: 0.85;
+      max-width: calc(var(--u) * 34);
+    }
+    .qr-text .arrow {
+      display: inline-block;
+      animation: point 1.6s ease-in-out infinite;
+    }
+    @keyframes point { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(calc(var(--u) * -1)); } }
+
+    /* ===== Juice wave footer ===== */
+    .wave-footer {
+      position: relative;
+      background: var(--lime);
+      color: var(--ink);
+      text-align: center;
+      padding: calc(var(--u) * 1.2) calc(var(--u) * 2) calc(var(--u) * 1.6);
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: calc(var(--u) * 2.2);
+      margin-top: calc(var(--u) * 3.5);
+    }
+    .wave-footer .waves {
+      position: absolute;
+      left: 0;
+      top: calc(var(--u) * -3.4);
+      width: 100%;
+      height: calc(var(--u) * 3.5);
+      overflow: hidden;
+    }
+    .wave-footer .waves svg {
+      position: absolute;
+      left: 0; top: 0;
+      width: 200%;
+      height: 100%;
+      animation: waveMove 9s linear infinite;
+    }
+    .wave-footer .waves svg.back {
+      animation-duration: 14s;
+      animation-direction: reverse;
+      opacity: 0.45;
+      top: calc(var(--u) * -0.6);
+    }
+    .wave-footer .waves path { fill: var(--lime); }
+    .wave-footer span { font-family: 'DM Sans', sans-serif; font-weight: 500; opacity: 0.75; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; }
+      .splash { display: none; }
+      .in, h1 span, .logo { opacity: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. Intro (plays once when the screen loads) -->
+  <div class="splash" id="splash">
+    <div class="liquid">
+      <svg viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 20 Q 75 0 150 20 T 300 20 T 450 20 T 600 20 T 750 20 T 900 20 T 1050 20 T 1200 20 V40 H0 Z" />
+      </svg>
+    </div>
+    <img class="splash-logo" src="logo.png" alt="">
+  </div>
+
+  <!-- 2. Background -->
+  <div class="bg" id="bg">
+    <div class="blob lime"></div>
+    <div class="blob citrus"></div>
+    <div class="blob rasp"></div>
+  </div>
+
+  <!-- 3. Screen -->
+  <div class="screen">
+
+    <section class="intro">
+      <img class="logo" src="logo.png" alt="ByPulse">
+      <svg class="pulse-line in" viewBox="0 0 220 40" aria-hidden="true">
+        <path d="M2 20 H70 L82 6 L96 34 L110 2 L124 38 L136 20 H218" />
+      </svg>
+      <h1 aria-label="Menu.">
+        <span>M</span><span>e</span><span>n</span><span>u</span><span class="dot">.</span>
+      </h1>
+      <p class="tagline"><span id="typed"></span><span class="cursor"></span></p>
+    </section>
+
+    <div class="ticker-wrap in" aria-hidden="true">
+      <div class="ticker b"><div class="ticker-track" id="trackB"></div></div>
+      <div class="ticker a"><div class="ticker-track" id="trackA"></div></div>
+    </div>
+
+    <div class="menu-area in" id="menuArea">
+      <div class="menu-card" id="card">
+        <img class="menu-image" id="menuImg" src="qr.png" alt="Scan to order">
+      </div>
+    </div>
+
+    <div class="qr-box in">
+      <div class="qr-text">
+        <h2>Scan to order</h2>
+        <p>Tell Suzy how you feel, shape it together, give it a name.</p>
+      </div>
+    </div>
+
+    <footer class="wave-footer">
+      <div class="waves" aria-hidden="true">
+        <svg class="back" viewBox="0 0 1200 40" preserveAspectRatio="none"><path d="M0 20 Q 75 0 150 20 T 300 20 T 450 20 T 600 20 T 750 20 T 900 20 T 1050 20 T 1200 20 V40 H0 Z" /></svg>
+        <svg viewBox="0 0 1200 40" preserveAspectRatio="none"><path d="M0 20 Q 75 0 150 20 T 300 20 T 450 20 T 600 20 T 750 20 T 900 20 T 1050 20 T 1200 20 V40 H0 Z" /></svg>
+      </div>
+      Dubai's first AI-operated juice bar <span>· ByPulse at TheBlock</span>
+    </footer>
+  </div>
+
+  <script>
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ---- Remove the intro when it's done ---- */
+    setTimeout(() => document.getElementById('splash').remove(), 4000);
+
+    /* ---- Bubbles and falling leaves ---- */
+    const bg = document.getElementById('bg');
+    const leafSVG = (c) => `<svg viewBox="0 0 40 60"><path d="M20 2 C34 14 38 34 30 50 C26 58 14 58 10 50 C2 34 6 14 20 2 Z" fill="${c}"/></svg>`;
+    if (!reduceMotion) {
+      for (let i = 0; i < 14; i++) {
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        const s = 0.8 + Math.random() * 2.2;
+        Object.assign(b.style, {
+          width: s + 'vmin', height: s + 'vmin',
+          left: Math.random() * 100 + '%',
+          animationDuration: 12 + Math.random() * 10 + 's',
+          animationDelay: Math.random() * 10 + 's'
+        });
+        bg.appendChild(b);
+      }
+      for (let i = 0; i < 7; i++) {
+        const l = document.createElement('div');
+        l.className = 'leaf';
+        const s = 2 + Math.random() * 2.5;
+        l.innerHTML = leafSVG(i % 3 === 0 ? '#F8FF92' : '#A1FF92');
+        Object.assign(l.style, {
+          width: s + 'vmin', height: s * 1.5 + 'vmin',
+          left: Math.random() * 95 + '%',
+          opacity: 0.3 + Math.random() * 0.35,
+          animationDuration: 18 + Math.random() * 12 + 's',
+          animationDelay: 3 + Math.random() * 12 + 's'
+        });
+        bg.appendChild(l);
+      }
+    }
+
+    /* ---- Ticker words, from the ByPulse deck (edit these!) ---- */
+    const fill = (id, words) => {
+      const html = words.map(w => `<span>${w}</span><span>✦</span>`).join('');
+      document.getElementById(id).innerHTML = html.repeat(6);
+    };
+    fill('trackA', ['Fresh fruit. Your mood. One of one.', 'Made by you', 'Fun meets fresh', 'Real fruit, real greens']);
+    fill('trackB', ['Create your own drink', 'Make the cup yours', 'Experience something new', 'Not your average juice run']);
+
+    /* ---- Rotating lines, from the ByPulse deck (edit these!) ---- */
+    const lines = [
+      'Every drink starts with <b>how you feel</b>.',
+      'More than a juice. <b>It\'s a whole moment.</b>',
+      'Fresh fruit. Your mood. <b>One of one.</b>',
+      'Your cup, your vibe, <b>your post</b>.',
+      'Come as you are. <b>Leave hydrated.</b>'
+    ];
+    const typed = document.getElementById('typed');
+    let li = 0;
+    function typeLine() {
+      const full = lines[li];
+      const total = full.replace(/<[^>]+>/g, '').length;
+      let n = 0;
+      const t = setInterval(() => {
+        n++;
+        let count = 0, out = '', inTag = false;
+        for (const ch of full) {
+          if (ch === '<') inTag = true;
+          if (inTag) { out += ch; if (ch === '>') inTag = false; continue; }
+          if (count < n) { out += ch; count++; }
+        }
+        typed.innerHTML = out;
+        if (n >= total) {
+          clearInterval(t);
+          setTimeout(() => { li = (li + 1) % lines.length; typeLine(); }, 4000);
+        }
+      }, 20);
+    }
+    setTimeout(typeLine, reduceMotion ? 0 : 4000);
+
+    /* ---- Make the menu image as big as possible without cropping ---- */
+    const area = document.getElementById('menuArea');
+    const card = document.getElementById('card');
+    const img = document.getElementById('menuImg');
+    function fitMenu() {
+      if (!img.naturalWidth) return;
+      const cs = getComputedStyle(area);
+      const w = area.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      const h = area.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      const ratio = img.naturalWidth / img.naturalHeight;
+      let cw = w, ch = w / ratio;
+      if (ch > h) { ch = h; cw = h * ratio; }
+      card.style.width = cw + 'px';
+      card.style.height = ch + 'px';
+    }
+    img.complete ? fitMenu() : img.addEventListener('load', fitMenu);
+    window.addEventListener('resize', fitMenu);
+
+    /* ---- Refresh every 30 minutes so menu changes show up on the screen ---- */
+    setTimeout(() => location.reload(), 30 * 60 * 1000);
+  </script>
+
+</body>
+</html>
